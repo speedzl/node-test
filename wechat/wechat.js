@@ -4,10 +4,10 @@ var Promise =require('bluebird');
 var request = Promise.promisify(require('request'));
 var util=require('./util');
 var fs = require('fs');
-var prefixs='https://api.weixin.qq.com/cgi-bin/';
-var prefix='http://file.api.weixin.qq.com/cgi-bin/';
+var prefix='https://api.weixin.qq.com/cgi-bin/';
+
 var api = {
- 	accessToken:prefixs + 'token?grant_type=client_credential',
+ 	accessToken:prefix + 'token?grant_type=client_credential',
  	upload: prefix + 'media/upload?'
  }
 
@@ -137,27 +137,31 @@ Wechat.prototype.uploadMaterial = function*(type, filepath){
   	function(resolve,reject){
 
   		that.fetchAccessToken().then(function(data){
-  			var formMedia = fs.createReadStream(filepath);
+  			
   		    var url = api.upload + 'access_token=' + data.access_token + '&type='+type;
   		 		
               	request({  
                          method: 'POST',
               	         url: url,
-                         json: true,
+              	         json: true,
+                  
        					 formData: {
-         							media: formMedia,	
-        							} gi
+         							media: fs.createReadStream(filepath),
+         							nonce: ''
+        							} 
         	    }).then(function(response){
-             			var _data = response.body;
-              // console.log('HEADERS: ' + JSON.stringify(requset.headers));
-              // console.log(JSON.stringify(_data))
-				           if(_data){
+             			
+         				   var _data = response.body;
+
+				           if(response.statusCode === 200){
 				           		resolve(_data);
 				           		console.log(_data);
 				           }
 				           else{
 				           		throw new Error('Upload错误')
          				   }
+
+             			  
        				})	
           	})
 
